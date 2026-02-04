@@ -33,16 +33,12 @@ button {
 <div class="card">
   <h3>Mahsulot 1</h3>
   <p>Narxi: 100 000 so‘m</p>
-  <button onclick="buy()">Sotib olish</button>
+  <button onclick="buy('Mahsulot 1')">Sotib olish</button>
 </div>
 
 <script>
-const tg = window.Telegram.WebApp;
-tg.expand();
-
-function buy() {
-  tg.sendData("Mahsulot 1");
-  tg.close();
+function buy(product) {
+  Telegram.WebApp.sendData(product);
 }
 </script>
 
