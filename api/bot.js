@@ -1,8 +1,6 @@
 import { createClient } from "@supabase/supabase-js"
 
-export const config = {
-  api: { bodyParser: true }
-}
+export const config = { api: { bodyParser: true } }
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -27,25 +25,26 @@ export default async function handler(req, res) {
       message?.chat?.id ||
       callback?.message?.chat?.id
 
-    if (!chatId) {
-      return res.status(200).send("No chat")
-    }
+    if (!chatId) return res.status(200).send("No chat")
 
     // ================= START =================
     if (message?.text === "/start") {
 
       await sendMessage(chatId,
-        "🛒 Do‘konga xush kelibsiz!",
+        "🛒 *Do‘konga xush kelibsiz!*",
         {
-          inline_keyboard: [
-            [{ text: "📦 Mahsulotlar", callback_data: "products" }]
-          ]
-        }
+          keyboard: [
+            [{ text: "🛍 Mahsulotlar" }],
+            [{ text: "📦 Buyurtmalarim" }]
+          ],
+          resize_keyboard: true
+        },
+        true
       )
     }
 
     // ================= MAHSULOTLAR =================
-    if (callback?.data === "products") {
+    if (message?.text === "🛍 Mahsulotlar") {
 
       const { data: products } = await supabase
         .from("products")
@@ -59,25 +58,58 @@ export default async function handler(req, res) {
       for (const product of products) {
         await sendMessage(
           chatId,
-          `🛍 ${product.name}\n💰 ${product.price} USD`,
+          `🛍 *${product.name}*\n💰 ${product.price} USD`,
           {
             inline_keyboard: [
               [
-                {
-                  text: "Sotib olish",
-                  callback_data: `buy_${product.id}`
-                }
+                { text: "➖", callback_data: `minus_${product.id}_1` },
+                { text: "1", callback_data: "count" },
+                { text: "➕", callback_data: `plus_${product.id}_1` }
+              ],
+              [
+                { text: "🛒 Savatga qo‘shish", callback_data: `buy_${product.id}_1` }
               ]
             ]
-          }
+          },
+          true
         )
       }
+    }
+
+    // ================= PLUS / MINUS =================
+    if (callback?.data?.startsWith("plus_") ||
+        callback?.data?.startsWith("minus_")) {
+
+      const [type, productId, count] = callback.data.split("_")
+      let newCount = parseInt(count)
+
+      if (type === "plus") newCount++
+      if (type === "minus" && newCount > 1) newCount--
+
+      await answerCallback(callback.id)
+
+      await sendMessage(
+        chatId,
+        "Miqdor yangilandi",
+        {
+          inline_keyboard: [
+            [
+              { text: "➖", callback_data: `minus_${productId}_${newCount}` },
+              { text: `${newCount}`, callback_data: "count" },
+              { text: "➕", callback_data: `plus_${productId}_${newCount}` }
+            ],
+            [
+              { text: "🛒 Savatga qo‘shish", callback_data: `buy_${productId}_${newCount}` }
+            ]
+          ]
+        }
+      )
     }
 
     // ================= SOTIB OLISH =================
     if (callback?.data?.startsWith("buy_")) {
 
-      const productId = callback.data.replace("buy_", "")
+      const [, productId, count] = callback.data.split("_")
 
       const { data: product } = await supabase
         .from("products")
@@ -89,23 +121,33 @@ export default async function handler(req, res) {
         return sendMessage(chatId, "Mahsulot topilmadi")
       }
 
-      // DB ga yozish
+      const total = product.price * count
+
       await supabase.from("orders").insert([
         {
           user_id: chatId,
-          items: [{ name: product.name, price: product.price }],
-          total: product.price,
+          items: [{
+            name: product.name,
+            price: product.price,
+            count: count
+          }],
+          total: total,
           status: "NEW"
         }
       ])
 
-      // Admin ga xabar
       await sendMessage(
         ADMIN_ID,
-        `🆕 Yangi buyurtma!\n👤 ${chatId}\n📦 ${product.name}\n💰 ${product.price} USD`
+        `🆕 *Yangi buyurtma!*\n👤 ${chatId}\n📦 ${product.name}\n🔢 ${count} dona\n💰 ${total} USD`,
+        null,
+        true
       )
 
-      await sendMessage(chatId, "✅ Buyurtma qabul qilindi!")
+      await sendMessage(chatId,
+        `✅ Buyurtma qabul qilindi!\n💰 Jami: ${total} USD`
+      )
+
+      await answerCallback(callback.id)
     }
 
     res.status(200).send("OK")
@@ -116,14 +158,25 @@ export default async function handler(req, res) {
   }
 }
 
-async function sendMessage(chatId, text, keyboard = null) {
+async function sendMessage(chatId, text, keyboard = null, markdown = false) {
   await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       chat_id: chatId,
       text,
+      parse_mode: markdown ? "Markdown" : undefined,
       reply_markup: keyboard
+    })
+  })
+}
+
+async function answerCallback(callbackId) {
+  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      callback_query_id: callbackId
     })
   })
 }
