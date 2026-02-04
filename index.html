@@ -10,56 +10,92 @@
 body{
 margin:0;
 font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-background:#f3f4f6;
+background:#f5f6f8;
 }
 
-.top{
-padding:20px;
+/* HEADER */
+.header{
+padding:20px 15px 10px;
 font-size:22px;
 font-weight:700;
 }
 
+/* SEARCH */
 .search{
-margin:0 15px 15px 15px;
+padding:0 15px 15px;
 }
-
 .search input{
 width:100%;
-padding:12px;
-border-radius:14px;
+padding:14px;
+border-radius:15px;
 border:none;
-background:#e9e9ee;
+background:#e9e9ef;
+font-size:14px;
 }
 
+/* CATEGORY */
+.categories{
+display:flex;
+overflow-x:auto;
+padding:0 15px 15px;
+gap:15px;
+}
+.cat{
+min-width:70px;
+text-align:center;
+font-size:12px;
+}
+.cat img{
+width:60px;
+height:60px;
+border-radius:15px;
+background:white;
+padding:5px;
+}
+
+/* SECTION TITLE */
+.section{
+display:flex;
+justify-content:space-between;
+padding:0 15px;
+align-items:center;
+}
+.section h3{
+margin:10px 0;
+}
+.section span{
+color:#6C4CF1;
+font-size:14px;
+}
+
+/* PRODUCTS */
 .products{
-padding:15px;
 display:grid;
 grid-template-columns:1fr 1fr;
 gap:15px;
+padding:15px;
 }
-
 .card{
 background:white;
 border-radius:20px;
 padding:12px;
-box-shadow:0 8px 20px rgba(0,0,0,0.05);
+box-shadow:0 6px 15px rgba(0,0,0,0.05);
 }
-
 .card img{
 width:100%;
-border-radius:14px;
+height:130px;
+object-fit:cover;
+border-radius:15px;
 }
-
-.name{
-font-weight:600;
+.price{
+font-weight:700;
 margin-top:8px;
 }
-
-.price{
+.name{
 color:#666;
-margin:6px 0;
+font-size:13px;
+margin-bottom:5px;
 }
-
 .btn{
 background:linear-gradient(135deg,#6C4CF1,#8B5CF6);
 color:white;
@@ -68,10 +104,11 @@ padding:10px;
 width:100%;
 border-radius:12px;
 font-size:14px;
-cursor:pointer;
+margin-top:8px;
 }
 
-.bottom-nav{
+/* BOTTOM NAV */
+.bottom{
 position:fixed;
 bottom:0;
 width:100%;
@@ -79,15 +116,13 @@ background:white;
 display:flex;
 justify-content:space-around;
 padding:10px 0;
-box-shadow:0 -5px 20px rgba(0,0,0,0.08);
-font-size:13px;
+box-shadow:0 -5px 15px rgba(0,0,0,0.08);
+font-size:12px;
 }
-
-.bottom-nav div{
+.bottom div{
 text-align:center;
-color:#666;
+color:#777;
 }
-
 .active{
 color:#6C4CF1;
 font-weight:600;
@@ -97,41 +132,73 @@ font-weight:600;
 
 <body>
 
-<div class="top">🛍 My Internet Do‘kon</div>
+<div class="header">🛍 My Shop</div>
 
 <div class="search">
-<input type="text" placeholder="Mahsulotlarni qidirish...">
+<input type="text" placeholder="Mahsulotlar va toifalarni qidirish">
 </div>
 
+<!-- Categories -->
+<div class="categories">
+<div class="cat">
+<img src="https://cdn-icons-png.flaticon.com/512/2331/2331970.png">
+<div>Kolyaska</div>
+</div>
+
+<div class="cat">
+<img src="https://cdn-icons-png.flaticon.com/512/869/869869.png">
+<div>Archa</div>
+</div>
+
+<div class="cat">
+<img src="https://cdn-icons-png.flaticon.com/512/2972/2972185.png">
+<div>Samokat</div>
+</div>
+
+<div class="cat">
+<img src="https://cdn-icons-png.flaticon.com/512/2921/2921822.png">
+<div>O'yinchoq</div>
+</div>
+</div>
+
+<!-- Section -->
+<div class="section">
+<h3>Mashhur</h3>
+<span>39 yana</span>
+</div>
+
+<!-- Products -->
 <div class="products">
 
 <div class="card">
-<img src="https://via.placeholder.com/200x150">
-<div class="name">WK-609</div>
+<img src="https://images.unsplash.com/photo-1583267746897-2cf415887172">
 <div class="price">48 USD</div>
+<div class="name">WK-609</div>
 <button class="btn" onclick="buy('WK-609')">Sotib olish</button>
 </div>
 
 <div class="card">
-<img src="https://via.placeholder.com/200x150">
-<div class="name">E406S</div>
+<img src="https://images.unsplash.com/photo-1606813907291-d86efa9b94db">
 <div class="price">42 USD</div>
+<div class="name">E406S</div>
 <button class="btn" onclick="buy('E406S')">Sotib olish</button>
 </div>
 
 <div class="card">
-<img src="https://via.placeholder.com/200x150">
-<div class="name">TJQ-900</div>
+<img src="https://images.unsplash.com/photo-1595433707802-7f92f9b32f67">
 <div class="price">91 USD</div>
+<div class="name">TJQ-900</div>
 <button class="btn" onclick="buy('TJQ-900')">Sotib olish</button>
 </div>
 
 </div>
 
-<div class="bottom-nav">
+<!-- Bottom Nav -->
+<div class="bottom">
 <div class="active">Bosh sahifa</div>
 <div>Katalog</div>
 <div>Savat</div>
+<div>Sevimlilar</div>
 <div>Profil</div>
 </div>
 
