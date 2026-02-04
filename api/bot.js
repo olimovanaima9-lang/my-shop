@@ -1,3 +1,9 @@
+export const config = {
+  api: {
+    bodyParser: true,
+  },
+};
+
 export default async function handler(req, res) {
   const TOKEN = "8253928399:AAGcYrHrDGXkUTi61AeTavLN0Hfr0TuhSR4";
   const ADMIN_ID = 5809105110;
@@ -9,12 +15,12 @@ export default async function handler(req, res) {
 
   const body = req.body;
 
-  // WebApp dan kelgan data
-  if (body.message && body.message.web_app_data) {
+  console.log("INCOMING:", body);
+
+  if (body?.message?.web_app_data) {
     const user = body.message.from;
     const product = body.message.web_app_data.data;
 
-    // Admin ga xabar
     await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -30,10 +36,8 @@ export default async function handler(req, res) {
     });
   }
 
-  // Tugmalar ishlashi
-  if (body.callback_query) {
+  if (body?.callback_query) {
     const data = body.callback_query.data;
-    const message = body.callback_query.message;
 
     if (data === "send_to_cook") {
       await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
