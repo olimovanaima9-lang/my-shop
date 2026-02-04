@@ -1,48 +1,30 @@
-export const config = {
-  api: { bodyParser: true },
-}
-
 export default async function handler(req, res) {
-
-  const TOKEN = process.env.BOT_TOKEN
-  const ADMIN_ID = 5809105110
+  const BOT_TOKEN = process.env.BOT_TOKEN
 
   if (req.method !== "POST") {
-    return res.status(200).json({ ok: true })
+    return res.status(200).send("OK")
   }
 
-  const body = req.body
+  const update = req.body
 
-  // USER BUYURTMA BERGANDA
-  if (body.message?.web_app_data) {
+  console.log("UPDATE:", JSON.stringify(update))
 
-    const user = body.message.from
-    const data = JSON.parse(body.message.web_app_data.data)
+  const chatId =
+    update.message?.chat?.id ||
+    update.callback_query?.message?.chat?.id
 
-    const itemsText = data.items.map(i =>
-      `${i.name} x ${i.qty} = ${i.price * i.qty} USD`
-    ).join("\n")
+  if (!chatId) {
+    return res.status(200).send("No chat id")
+  }
 
-    const text = `
-🛒 Yangi buyurtma!
-
-👤 ${user.first_name}
-🆔 ${user.id}
-
-${itemsText}
-
-💰 Jami: ${data.total} USD
-    `
-
-    await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: ADMIN_ID,
-        text: text
-      })
+  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text: "Bot ishlayapti ✅"
     })
-  }
+  })
 
-  return res.status(200).json({ ok: true })
+  res.status(200).send("OK")
 }
