@@ -4,171 +4,203 @@
 <meta charset="UTF-8">
 <title>My Market</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
 <style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f5f6fa;
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#f5f6fa;
 }
 
-.header {
-  background: linear-gradient(90deg,#6a5cff,#8f7cff);
-  color: white;
-  padding: 20px;
-  font-size: 20px;
-  font-weight: bold;
+.header{
+  background:linear-gradient(90deg,#6a5cff,#8f7cff);
+  color:white;
+  padding:20px;
+  font-size:20px;
+  font-weight:bold;
 }
 
-.search {
-  padding: 10px;
+.search{
+  padding:10px;
+}
+.search input{
+  width:100%;
+  padding:12px;
+  border-radius:15px;
+  border:none;
+  background:#ececf3;
 }
 
-.search input {
-  width: 100%;
-  padding: 12px;
-  border-radius: 15px;
-  border: none;
-  background: #ececf3;
+.products{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:15px;
+  padding:15px;
 }
 
-.categories {
-  display: flex;
-  overflow-x: auto;
-  gap: 10px;
-  padding: 10px;
+.card{
+  background:white;
+  border-radius:20px;
+  padding:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.05);
 }
 
-.cat {
-  background: white;
-  padding: 8px 15px;
-  border-radius: 20px;
-  white-space: nowrap;
-  font-size: 14px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+.card img{
+  width:100%;
+  border-radius:15px;
 }
 
-.products {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-  padding: 15px;
+.price{
+  font-weight:bold;
+  margin-top:5px;
 }
 
-.card {
-  background: white;
-  border-radius: 20px;
-  padding: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  position: relative;
+button{
+  margin-top:10px;
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(90deg,#6a5cff,#8f7cff);
+  color:white;
+  font-weight:bold;
 }
 
-.badge {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  background: red;
-  color: white;
-  font-size: 12px;
-  padding: 3px 8px;
-  border-radius: 10px;
+.bottom-nav{
+  position:fixed;
+  bottom:0;
+  width:100%;
+  background:white;
+  display:flex;
+  justify-content:space-around;
+  padding:10px 0;
+  border-top:1px solid #ddd;
+  font-size:20px;
 }
 
-.card img {
-  width: 100%;
-  border-radius: 15px;
+/* Modal */
+.modal{
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  background:white;
+  border-top-left-radius:20px;
+  border-top-right-radius:20px;
+  padding:20px;
+  box-shadow:0 -5px 20px rgba(0,0,0,0.2);
+  display:none;
+  max-height:70%;
+  overflow:auto;
 }
 
-.price {
-  font-weight: bold;
-  margin-top: 5px;
+.modal h3{
+  margin-top:0;
 }
 
-.old {
-  text-decoration: line-through;
-  font-size: 12px;
-  color: gray;
+.cart-item{
+  margin-bottom:10px;
 }
 
-button {
-  margin-top: 10px;
-  width: 100%;
-  padding: 10px;
-  border: none;
-  border-radius: 12px;
-  background: linear-gradient(90deg,#6a5cff,#8f7cff);
-  color: white;
-  font-weight: bold;
+.total{
+  font-weight:bold;
+  margin-top:10px;
 }
 
-.bottom-nav {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  background: white;
-  display: flex;
-  justify-content: space-around;
-  padding: 10px 0;
-  border-top: 1px solid #ddd;
-}
-
-.bottom-nav div {
-  font-size: 20px;
+.confirm-btn{
+  margin-top:15px;
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:15px;
+  background:green;
+  color:white;
+  font-weight:bold;
 }
 </style>
 </head>
+
 <body>
 
-<div class="header">
-  🛍 My Market
-</div>
+<div class="header">🛍 My Market</div>
 
 <div class="search">
   <input placeholder="Mahsulot qidirish..." />
 </div>
 
-<div class="categories">
-  <div class="cat">🔥 Mashhur</div>
-  <div class="cat">🆕 Yangi</div>
-  <div class="cat">💰 Chegirma</div>
-  <div class="cat">🎧 Elektronika</div>
-  <div class="cat">👕 Kiyim</div>
-</div>
-
 <div class="products">
 
   <div class="card">
-    <div class="badge">-20%</div>
     <img src="https://picsum.photos/300/200?1">
     <div class="price">$40</div>
-    <div class="old">$50</div>
-    <button onclick="buy('WK-609')">Savatga qo‘shish</button>
+    <button onclick="addToCart('WK-609',40)">Savatga qo‘shish</button>
   </div>
 
   <div class="card">
     <img src="https://picsum.photos/300/200?2">
     <div class="price">$42</div>
-    <button onclick="buy('E406S')">Savatga qo‘shish</button>
+    <button onclick="addToCart('E406S',42)">Savatga qo‘shish</button>
   </div>
 
 </div>
 
 <div class="bottom-nav">
   <div>🏠</div>
-  <div>🛒</div>
+  <div onclick="openCart()">🛒</div>
   <div>❤️</div>
   <div>👤</div>
 </div>
 
+<div class="modal" id="cartModal">
+  <h3>🛒 Savat</h3>
+  <div id="cartItems"></div>
+  <div class="total" id="cartTotal"></div>
+  <button class="confirm-btn" onclick="confirmOrder()">Buyurtmani tasdiqlash</button>
+</div>
+
 <script>
 let tg = window.Telegram?.WebApp;
-if (tg) tg.expand();
+if(tg) tg.expand();
 
-function buy(product) {
-  if (tg) {
-    tg.sendData(product);
-  } else {
-    alert("Test: " + product);
+let cart = [];
+
+function addToCart(name, price){
+  cart.push({name, price});
+  alert(name + " savatga qo‘shildi");
+}
+
+function openCart(){
+  const modal = document.getElementById("cartModal");
+  const itemsDiv = document.getElementById("cartItems");
+  const totalDiv = document.getElementById("cartTotal");
+
+  itemsDiv.innerHTML = "";
+  let total = 0;
+
+  cart.forEach((item, index)=>{
+    itemsDiv.innerHTML += `<div class="cart-item">${index+1}. ${item.name} - $${item.price}</div>`;
+    total += item.price;
+  });
+
+  totalDiv.innerText = "💰 Jami: $" + total;
+
+  modal.style.display = "block";
+}
+
+function confirmOrder(){
+  if(cart.length === 0){
+    alert("Savat bo‘sh");
+    return;
   }
+
+  if(tg){
+    tg.sendData(JSON.stringify(cart));
+  } else {
+    alert("Test rejim");
+  }
+
+  cart = [];
+  document.getElementById("cartModal").style.display = "none";
 }
 </script>
 
