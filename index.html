@@ -7,126 +7,19 @@
 <title>My Shop</title>
 
 <style>
-body{
-margin:0;
-font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-background:#f5f6f8;
-}
-
-/* HEADER */
-.header{
-padding:20px 15px 10px;
-font-size:22px;
-font-weight:700;
-}
-
-/* SEARCH */
-.search{
-padding:0 15px 15px;
-}
-.search input{
-width:100%;
-padding:14px;
-border-radius:15px;
-border:none;
-background:#e9e9ef;
-font-size:14px;
-}
-
-/* CATEGORY */
-.categories{
-display:flex;
-overflow-x:auto;
-padding:0 15px 15px;
-gap:15px;
-}
-.cat{
-min-width:70px;
-text-align:center;
-font-size:12px;
-}
-.cat img{
-width:60px;
-height:60px;
-border-radius:15px;
-background:white;
-padding:5px;
-}
-
-/* SECTION TITLE */
-.section{
-display:flex;
-justify-content:space-between;
-padding:0 15px;
-align-items:center;
-}
-.section h3{
-margin:10px 0;
-}
-.section span{
-color:#6C4CF1;
-font-size:14px;
-}
-
-/* PRODUCTS */
-.products{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:15px;
-padding:15px;
-}
-.card{
-background:white;
-border-radius:20px;
-padding:12px;
-box-shadow:0 6px 15px rgba(0,0,0,0.05);
-}
-.card img{
-width:100%;
-height:130px;
-object-fit:cover;
-border-radius:15px;
-}
-.price{
-font-weight:700;
-margin-top:8px;
-}
-.name{
-color:#666;
-font-size:13px;
-margin-bottom:5px;
-}
-.btn{
-background:linear-gradient(135deg,#6C4CF1,#8B5CF6);
-color:white;
-border:none;
-padding:10px;
-width:100%;
-border-radius:12px;
-font-size:14px;
-margin-top:8px;
-}
-
-/* BOTTOM NAV */
-.bottom{
-position:fixed;
-bottom:0;
-width:100%;
-background:white;
-display:flex;
-justify-content:space-around;
-padding:10px 0;
-box-shadow:0 -5px 15px rgba(0,0,0,0.08);
-font-size:12px;
-}
-.bottom div{
-text-align:center;
-color:#777;
-}
-.active{
-color:#6C4CF1;
-font-weight:600;
-}
+body{margin:0;font-family:sans-serif;background:#f5f6f8;padding-bottom:80px}
+.header{padding:20px;font-size:22px;font-weight:700}
+.section{padding:0 15px;font-weight:600;margin-top:10px}
+.products{display:flex;overflow-x:auto;gap:15px;padding:15px}
+.card{min-width:180px;background:white;border-radius:18px;padding:10px;box-shadow:0 4px 10px rgba(0,0,0,0.05)}
+.card img{width:100%;height:120px;object-fit:cover;border-radius:12px}
+.price{font-weight:700;margin-top:5px}
+.btn{background:#6C4CF1;color:white;border:none;padding:8px;width:100%;border-radius:10px;margin-top:8px}
+.qtyBox{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.qtyBox button{width:35px;height:30px;border:none;background:#6C4CF1;color:white;border-radius:8px}
+.bottom{position:fixed;bottom:0;width:100%;background:white;display:flex;justify-content:space-around;padding:10px 0;box-shadow:0 -5px 15px rgba(0,0,0,0.08)}
+.bottom div{font-size:12px}
+.cartCount{background:red;color:white;font-size:10px;padding:2px 6px;border-radius:10px}
 </style>
 </head>
 
@@ -134,81 +27,106 @@ font-weight:600;
 
 <div class="header">🛍 My Shop</div>
 
-<div class="search">
-<input type="text" placeholder="Mahsulotlar va toifalarni qidirish">
-</div>
+<div class="section">Mashhur</div>
 
-<!-- Categories -->
-<div class="categories">
-<div class="cat">
-<img src="https://cdn-icons-png.flaticon.com/512/2331/2331970.png">
-<div>Kolyaska</div>
-</div>
+<div class="products" id="products"></div>
 
-<div class="cat">
-<img src="https://cdn-icons-png.flaticon.com/512/869/869869.png">
-<div>Archa</div>
-</div>
-
-<div class="cat">
-<img src="https://cdn-icons-png.flaticon.com/512/2972/2972185.png">
-<div>Samokat</div>
-</div>
-
-<div class="cat">
-<img src="https://cdn-icons-png.flaticon.com/512/2921/2921822.png">
-<div>O'yinchoq</div>
-</div>
-</div>
-
-<!-- Section -->
-<div class="section">
-<h3>Mashhur</h3>
-<span>39 yana</span>
-</div>
-
-<!-- Products -->
-<div class="products">
-
-<div class="card">
-<img src="https://images.unsplash.com/photo-1583267746897-2cf415887172">
-<div class="price">48 USD</div>
-<div class="name">WK-609</div>
-<button class="btn" onclick="buy('WK-609')">Sotib olish</button>
-</div>
-
-<div class="card">
-<img src="https://images.unsplash.com/photo-1606813907291-d86efa9b94db">
-<div class="price">42 USD</div>
-<div class="name">E406S</div>
-<button class="btn" onclick="buy('E406S')">Sotib olish</button>
-</div>
-
-<div class="card">
-<img src="https://images.unsplash.com/photo-1595433707802-7f92f9b32f67">
-<div class="price">91 USD</div>
-<div class="name">TJQ-900</div>
-<button class="btn" onclick="buy('TJQ-900')">Sotib olish</button>
-</div>
-
-</div>
-
-<!-- Bottom Nav -->
 <div class="bottom">
-<div class="active">Bosh sahifa</div>
-<div>Katalog</div>
-<div>Savat</div>
-<div>Sevimlilar</div>
-<div>Profil</div>
+<div onclick="showHome()">Bosh sahifa</div>
+<div onclick="showCart()">Savat <span id="cartCount" class="cartCount">0</span></div>
+<div onclick="showProfile()">Profil</div>
 </div>
 
 <script>
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-function buy(product){
-tg.sendData(product);
+let products = [
+{id:1,name:"WK-609",price:48,img:"https://images.unsplash.com/photo-1583267746897-2cf415887172"},
+{id:2,name:"E406S",price:42,img:"https://images.unsplash.com/photo-1606813907291-d86efa9b94db"},
+{id:3,name:"TJQ-900",price:91,img:"https://images.unsplash.com/photo-1595433707802-7f92f9b32f67"}
+];
+
+let cart = {};
+
+function renderProducts(){
+let html="";
+products.forEach(p=>{
+html+=`
+<div class="card">
+<img src="${p.img}">
+<div class="price">${p.price} USD</div>
+<div>${p.name}</div>
+<button class="btn" onclick="addToCart(${p.id})">Savatga qo'shish</button>
+</div>`;
+});
+document.getElementById("products").innerHTML=html;
+}
+renderProducts();
+
+function addToCart(id){
+if(!cart[id]) cart[id]=1;
+else cart[id]++;
+updateCart();
+}
+
+function updateCart(){
+let total=0;
+for(let id in cart){ total+=cart[id]; }
+document.getElementById("cartCount").innerText=total;
+}
+
+function showCart(){
+let html="";
+for(let id in cart){
+let p = products.find(x=>x.id==id);
+html+=`
+<div class="card">
+<img src="${p.img}">
+<div>${p.name}</div>
+<div class="qtyBox">
+<button onclick="changeQty(${id},-1)">-</button>
+<span>${cart[id]}</span>
+<button onclick="changeQty(${id},1)">+</button>
+</div>
+<button class="btn" onclick="removeItem(${id})">Bekor qilish</button>
+</div>`;
+}
+html+=`<button class="btn" onclick="order()">Buyurtma berish</button>`;
+document.getElementById("products").innerHTML=html;
+}
+
+function changeQty(id,val){
+cart[id]+=val;
+if(cart[id]<=0) delete cart[id];
+updateCart();
+showCart();
+}
+
+function removeItem(id){
+delete cart[id];
+updateCart();
+showCart();
+}
+
+function order(){
+tg.sendData(JSON.stringify(cart));
 tg.close();
+}
+
+function showHome(){
+renderProducts();
+}
+
+function showProfile(){
+document.getElementById("products").innerHTML=`
+<div class="card">
+<button class="btn" onclick="requestPhone()">Telefon raqamni kiritish</button>
+</div>`;
+}
+
+function requestPhone(){
+tg.requestContact();
 }
 </script>
 
