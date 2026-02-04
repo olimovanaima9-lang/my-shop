@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel</title>
+<style>
+body{font-family:sans-serif;background:#f5f6f8;padding:20px}
+.card{background:white;padding:15px;margin-bottom:15px;border-radius:12px}
+input,select{width:100%;padding:8px;margin-top:5px}
+button{background:#6C4CF1;color:white;border:none;padding:8px;margin-top:10px;border-radius:8px}
+</style>
+</head>
+<body>
+
+<h2>Admin Panel</h2>
+
+<div class="card">
+<h3>Role qo‘shish</h3>
+<input id="userId" placeholder="Telegram ID">
+<select id="role">
+<option>ADMIN</option>
+<option>KURER</option>
+<option>TAYYORLOVCHI</option>
+</select>
+<button onclick="addRole()">Qo‘shish</button>
+</div>
+
+<div class="card">
+<h3>Kategoriya qo‘shish</h3>
+<input id="catName" placeholder="Kategoriya nomi">
+<button onclick="addCategory()">Qo‘shish</button>
+</div>
+
+<div class="card">
+<h3>Mahsulot qo‘shish</h3>
+<input id="pName" placeholder="Nomi">
+<input id="pPrice" placeholder="Narxi">
+<input id="pDesc" placeholder="Tavsif">
+<input id="pImg" placeholder="Rasm URL">
+<button onclick="addProduct()">Qo‘shish</button>
+</div>
+
+<script>
+async function addRole(){
+await fetch('/api/adminAction',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+type:"addRole",
+userId:document.getElementById('userId').value,
+role:document.getElementById('role').value
+})
+})
+alert("Role qo‘shildi")
+}
+
+async function addCategory(){
+await fetch('/api/adminAction',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+type:"addCategory",
+name:document.getElementById('catName').value
+})
+})
+alert("Kategoriya qo‘shildi")
+}
+
+async function addProduct(){
+await fetch('/api/adminAction',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+type:"addProduct",
+name:pName.value,
+price:pPrice.value,
+description:pDesc.value,
+image:pImg.value
+})
+})
+alert("Mahsulot qo‘shildi")
+}
+</script>
+
+</body>
+</html>
