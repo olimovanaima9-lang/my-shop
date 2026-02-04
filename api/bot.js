@@ -15,8 +15,27 @@ export default async function handler(req, res) {
 
   const body = req.body;
 
-  console.log("INCOMING:", body);
+  // START komandasi
+  if (body.message && body.message.text === "/start") {
+    await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: body.message.chat.id,
+        text: "🛒 Do‘konni oching:",
+        reply_markup: {
+          inline_keyboard: [
+            [{
+              text: "🛒 Do‘konni ochish",
+              web_app: { url: "https://my-shop-xi-five.vercel.app" }
+            }]
+          ]
+        }
+      })
+    });
+  }
 
+  // WebApp data
   if (body?.message?.web_app_data) {
     const user = body.message.from;
     const product = body.message.web_app_data.data;
@@ -34,37 +53,6 @@ export default async function handler(req, res) {
         }
       })
     });
-  }
-
-  if (body?.callback_query) {
-    const data = body.callback_query.data;
-
-    if (data === "send_to_cook") {
-      await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: COOK_ID,
-          text: `👨‍🍳 Yangi buyurtma tayyorlash uchun!`,
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: "✅ Tayyor bo‘ldi", callback_data: "ready_done" }]
-            ]
-          }
-        })
-      });
-    }
-
-    if (data === "ready_done") {
-      await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chat_id: ADMIN_ID,
-          text: `✅ Buyurtma tayyor bo‘ldi!`
-        })
-      });
-    }
   }
 
   res.status(200).json({ ok: true });
