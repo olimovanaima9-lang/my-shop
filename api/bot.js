@@ -1,59 +1,48 @@
-import { createClient } from '@supabase/supabase-js'
-
 export const config = {
-  api: {
-    bodyParser: true,
-  },
+  api: { bodyParser: true },
 }
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
-)
-
-const TOKEN = process.env.BOT_TOKEN
-const ADMIN_ID = 5809105110
-
 export default async function handler(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(200).json({ status: 'Bot running' })
+
+  const TOKEN = process.env.BOT_TOKEN
+  const ADMIN_ID = 5809105110
+
+  if (req.method !== "POST") {
+    return res.status(200).json({ ok: true })
   }
 
   const body = req.body
 
-  // ===== WEB APP DAN BUYURTMA =====
+  // USER BUYURTMA BERGANDA
   if (body.message?.web_app_data) {
+
     const user = body.message.from
     const data = JSON.parse(body.message.web_app_data.data)
 
-    const { items, total } = data
+    const itemsText = data.items.map(i =>
+      `${i.name} x ${i.qty} = ${i.price * i.qty} USD`
+    ).join("\n")
 
-    // 🔥 BUYURTMANI SUPABASE GA YOZAMIZ
-    const { error } = await supabase.from('orders').insert([
-      {
-        user_id: user.id,
-        items: items,
-        total: total,
-        status: 'NEW'
-      }
-    ])
+    const text = `
+🛒 Yangi buyurtma!
 
-    if (error) {
-      console.log(error)
-    }
+👤 ${user.first_name}
+🆔 ${user.id}
 
-    // ADMIN GA XABAR
+${itemsText}
+
+💰 Jami: ${data.total} USD
+    `
+
     await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: ADMIN_ID,
-        text: `🛒 Yangi buyurtma!\n👤 ${user.first_name}\n💰 ${total} USD`
+        text: text
       })
     })
-
-    return res.status(200).json({ ok: true })
   }
 
-  res.status(200).json({ ok: true })
+  return res.status(200).json({ ok: true })
 }
