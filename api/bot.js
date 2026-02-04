@@ -17,61 +17,105 @@ export default async function handler(req, res) {
 
   const body = req.body;
 
-  // START
+  // ================= START =================
   if (body.message && body.message.text === "/start") {
-    await sendMessage(TOKEN, body.message.chat.id, "🛒 Do‘konni oching:", {
-      inline_keyboard: [[{
-        text: "🛒 Do‘konni ochish",
-        web_app: { url: "https://my-shop-xi-five.vercel.app" }
-      }]]
-    });
+    await sendMessage(TOKEN, body.message.chat.id,
+      "🛍 Xush kelibsiz!\n\nDo‘konni oching:",
+      {
+        inline_keyboard: [
+          [{
+            text: "🛒 Do‘konni ochish",
+            web_app: { url: "https://my-shop-xi-five.vercel.app" }
+          }],
+          [{
+            text: "📦 Buyurtmalarim",
+            callback_data: "my_orders"
+          }]
+        ]
+      }
+    );
   }
 
-  // SAVAT BUYURTMA
+  // ================= WEB APP DATA =================
   if (body?.message?.web_app_data) {
     const user = body.message.from;
-    const cart = JSON.parse(body.message.web_app_data.data);
+    const data = body.message.web_app_data.data;
 
-    let total = 0;
-    let text = `🆕 Yangi buyurtma #${orders.length + 1}\n\n`;
-    text += `👤 ${user.first_name}\n\n`;
+    // ====== BUYURTMA YUBORILDI ======
+    try {
+      const cart = JSON.parse(data);
 
-    cart.forEach((item, index) => {
-      text += `${index + 1}. ${item.name} - $${item.price}\n`;
-      total += item.price;
-    });
+      if (!Array.isArray(cart)) return;
 
-    text += `\n💰 Jami: $${total}`;
+      const orderId = orders.length + 1;
+      let total = 0;
 
-    const orderId = orders.length + 1;
+      let text = `🆕 Yangi buyurtma #${orderId}\n\n`;
+      text += `👤 ${user.first_name}\n\n`;
 
-    orders.push({
-      id: orderId,
-      user: user.id,
-      items: cart,
-      total: total,
-      status: "new"
-    });
+      cart.forEach((item, i) => {
+        const sum = item.price * item.qty;
+        total += sum;
+        text += `${i + 1}. ${item.name} x${item.qty} - $${sum}\n`;
+      });
 
-    await sendMessage(TOKEN, ADMIN_ID, text, {
-      inline_keyboard: [[{
-        text: "👨‍🍳 Tayyorlashga yuborish",
-        callback_data: `cook_${orderId}`
-      }]]
-    });
+      text += `\n💰 Jami: $${total}`;
+
+      orders.push({
+        id: orderId,
+        user: user.id,
+        items: cart,
+        total,
+        status: "Qabul qilindi"
+      });
+
+      // Adminga yuborish
+      await sendMessage(TOKEN, ADMIN_ID, text, {
+        inline_keyboard: [[{
+          text: "👨‍🍳 Tayyorlash",
+          callback_data: `cook_${orderId}`
+        }]]
+      });
+
+      // Mijozga tasdiq
+      await sendMessage(TOKEN, user.id,
+        `✅ Buyurtmangiz qabul qilindi!\n\nBuyurtma raqami: #${orderId}`
+      );
+
+    } catch (e) {
+      console.log("JSON error");
+    }
   }
 
-  // TUGMALAR
+  // ================= CALLBACKS =================
   if (body?.callback_query) {
     const data = body.callback_query.data;
+    const fromId = body.callback_query.from.id;
 
+    // ====== BUYURTMALARIM ======
+    if (data === "my_orders") {
+      const userOrders = orders.filter(o => o.user === fromId);
+
+      if (userOrders.length === 0) {
+        await sendMessage(TOKEN, fromId, "📦 Sizda buyurtmalar yo‘q.");
+        return;
+      }
+
+      let text = "📦 Sizning buyurtmalaringiz:\n\n";
+      userOrders.forEach(o => {
+        text += `#${o.id} - ${o.status}\n`;
+      });
+
+      await sendMessage(TOKEN, fromId, text);
+    }
+
+    // ====== COOK ======
     if (data.startsWith("cook_")) {
       const id = parseInt(data.split("_")[1]);
       const order = orders.find(o => o.id === id);
-
       if (!order) return;
 
-      order.status = "cooking";
+      order.status = "Tayyorlanmoqda";
 
       await sendMessage(TOKEN, COOK_ID,
         `👨‍🍳 Buyurtma #${id} tayyorlash boshlandi`,
@@ -82,15 +126,19 @@ export default async function handler(req, res) {
           }]]
         }
       );
+
+      await sendMessage(TOKEN, order.user,
+        `👨‍🍳 Buyurtmangiz #${id} tayyorlanmoqda`
+      );
     }
 
+    // ====== READY ======
     if (data.startsWith("ready_")) {
       const id = parseInt(data.split("_")[1]);
       const order = orders.find(o => o.id === id);
-
       if (!order) return;
 
-      order.status = "ready";
+      order.status = "Tayyor";
 
       await sendMessage(TOKEN, ADMIN_ID,
         `✅ Buyurtma #${id} tayyor bo‘ldi`,
@@ -101,18 +149,26 @@ export default async function handler(req, res) {
           }]]
         }
       );
+
+      await sendMessage(TOKEN, order.user,
+        `👨‍🍳 Buyurtmangiz #${id} tayyor bo‘ldi!`
+      );
     }
 
+    // ====== DELIVERED ======
     if (data.startsWith("delivered_")) {
       const id = parseInt(data.split("_")[1]);
       const order = orders.find(o => o.id === id);
-
       if (!order) return;
 
-      order.status = "done";
+      order.status = "Yetkazildi";
 
       await sendMessage(TOKEN, ADMIN_ID,
         `🎉 Buyurtma #${id} yetkazildi!`
+      );
+
+      await sendMessage(TOKEN, order.user,
+        `🚚 Buyurtmangiz #${id} yetkazildi!\nRahmat ❤️`
       );
     }
   }
