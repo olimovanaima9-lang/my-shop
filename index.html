@@ -1,161 +1,148 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>My Shop</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<title>My Shop</title>
+
 <style>
 body{
-  font-family:Arial;
-  background:#f2f2f2;
-  margin:0;
-  padding:10px;
+margin:0;
+font-family:-apple-system,BlinkMacSystemFont,sans-serif;
+background:#f4f5f7;
 }
+
+.header{
+padding:20px;
+font-size:22px;
+font-weight:700;
+}
+
+.products{
+padding:15px;
+}
+
 .card{
-  background:white;
-  padding:15px;
-  margin-bottom:15px;
-  border-radius:12px;
+background:white;
+border-radius:18px;
+padding:18px;
+margin-bottom:18px;
+box-shadow:0 5px 15px rgba(0,0,0,0.05);
 }
-button{
-  background:#6c4cff;
-  color:white;
-  border:none;
-  padding:8px 15px;
-  border-radius:8px;
-  cursor:pointer;
+
+.title{
+font-size:18px;
+font-weight:600;
 }
-.qty-box{
-  display:flex;
-  gap:10px;
-  align-items:center;
-  margin-top:10px;
+
+.price{
+margin:8px 0;
+color:#666;
 }
+
+.btn{
+background:linear-gradient(135deg,#6C4CF1,#8B5CF6);
+color:white;
+border:none;
+padding:12px;
+width:100%;
+border-radius:12px;
+font-size:15px;
+cursor:pointer;
+}
+
+.btn:active{
+opacity:0.8;
+}
+
 .cart-box{
-  background:white;
-  padding:15px;
-  border-radius:12px;
-  margin-top:20px;
+position:fixed;
+bottom:0;
+width:100%;
+background:white;
+padding:15px;
+box-shadow:0 -5px 15px rgba(0,0,0,0.08);
+}
+
+.cart-btn{
+background:linear-gradient(135deg,#4CAF50,#2ECC71);
+color:white;
+border:none;
+padding:14px;
+width:100%;
+border-radius:14px;
+font-size:16px;
+font-weight:600;
+}
+
+.badge{
+position:fixed;
+top:15px;
+right:15px;
+background:red;
+color:white;
+border-radius:50%;
+width:24px;
+height:24px;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:12px;
 }
 </style>
 </head>
+
 <body>
 
-<h2>🛒 My Shop</h2>
+<div class="header">🛒 My Shop</div>
+<div class="badge" id="count">0</div>
 
-<div id="products"></div>
+<div class="products">
+
+<div class="card">
+<div class="title">WK-609</div>
+<div class="price">48 USD</div>
+<button class="btn" onclick="addToCart('WK-609',48)">Savatga qo‘shish</button>
+</div>
+
+<div class="card">
+<div class="title">E406S</div>
+<div class="price">42 USD</div>
+<button class="btn" onclick="addToCart('E406S',42)">Savatga qo‘shish</button>
+</div>
+
+<div class="card">
+<div class="title">TJQ-900</div>
+<div class="price">91 USD</div>
+<button class="btn" onclick="addToCart('TJQ-900',91)">Savatga qo‘shish</button>
+</div>
+
+</div>
 
 <div class="cart-box">
-  <h3>Savat</h3>
-  <div id="cart"></div>
-  <h4 id="total"></h4>
-  <button onclick="confirmOrder()">Buyurtma berish</button>
+<button class="cart-btn" onclick="checkout()">Buyurtma berish</button>
 </div>
 
 <script>
-const tg = window.Telegram.WebApp
-tg.expand()
+const tg = window.Telegram.WebApp;
+tg.expand();
 
-let cart = []
+let cart = [];
 
-const products = [
-  { id:1, name:"WK-609", price:48 },
-  { id:2, name:"E406S", price:42 },
-  { id:3, name:"TJQ-900", price:91 }
-]
-
-function renderProducts(){
-  const container = document.getElementById("products")
-  container.innerHTML=""
-
-  products.forEach(p=>{
-    container.innerHTML+=`
-      <div class="card">
-        <h3>${p.name}</h3>
-        <p>${p.price} USD</p>
-        <button onclick="selectQty(${p.id})">Savatga qo‘shish</button>
-        <div id="qty-${p.id}"></div>
-      </div>
-    `
-  })
+function addToCart(name,price){
+cart.push({name,price});
+document.getElementById("count").innerText = cart.length;
 }
 
-function selectQty(id){
-  const box = document.getElementById("qty-"+id)
-  box.innerHTML=`
-    <div class="qty-box">
-      <button onclick="changeQty(${id},-1)">-</button>
-      <span id="count-${id}">1</span>
-      <button onclick="changeQty(${id},1)">+</button>
-      <button onclick="addToCart(${id})">Qo‘shish</button>
-    </div>
-  `
+function checkout(){
+if(cart.length==0){
+alert("Savat bo‘sh");
+return;
 }
-
-function changeQty(id,val){
-  const el = document.getElementById("count-"+id)
-  let count = parseInt(el.innerText)
-  count += val
-  if(count<1) count=1
-  el.innerText=count
+tg.sendData(JSON.stringify(cart));
+tg.close();
 }
-
-function addToCart(id){
-  const qty = parseInt(document.getElementById("count-"+id).innerText)
-  const product = products.find(p=>p.id===id)
-
-  const existing = cart.find(i=>i.id===id)
-  if(existing){
-    existing.qty += qty
-  }else{
-    cart.push({...product, qty})
-  }
-
-  renderCart()
-  document.getElementById("qty-"+id).innerHTML=""
-}
-
-function renderCart(){
-  const box = document.getElementById("cart")
-  box.innerHTML=""
-
-  cart.forEach(item=>{
-    box.innerHTML+=`
-      <p>${item.name} x ${item.qty} = ${item.price*item.qty} USD
-      <button onclick="removeItem(${item.id})">❌</button>
-      </p>
-    `
-  })
-
-  document.getElementById("total").innerText =
-    "Jami: "+getTotal()+" USD"
-}
-
-function removeItem(id){
-  cart = cart.filter(i=>i.id!==id)
-  renderCart()
-}
-
-function getTotal(){
-  return cart.reduce((sum,i)=>sum+i.price*i.qty,0)
-}
-
-function confirmOrder(){
-  if(cart.length===0){
-    alert("Savat bo‘sh")
-    return
-  }
-
-  const data = {
-    items: cart,
-    total: getTotal()
-  }
-
-  tg.sendData(JSON.stringify(data))
-  tg.close()
-}
-
-renderProducts()
 </script>
 
 </body>
