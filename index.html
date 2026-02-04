@@ -10,137 +10,137 @@
 body{
 margin:0;
 font-family:-apple-system,BlinkMacSystemFont,sans-serif;
-background:#f4f5f7;
+background:#f3f4f6;
 }
 
-.header{
+.top{
 padding:20px;
 font-size:22px;
 font-weight:700;
 }
 
+.search{
+margin:0 15px 15px 15px;
+}
+
+.search input{
+width:100%;
+padding:12px;
+border-radius:14px;
+border:none;
+background:#e9e9ee;
+}
+
 .products{
 padding:15px;
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:15px;
 }
 
 .card{
 background:white;
-border-radius:18px;
-padding:18px;
-margin-bottom:18px;
-box-shadow:0 5px 15px rgba(0,0,0,0.05);
+border-radius:20px;
+padding:12px;
+box-shadow:0 8px 20px rgba(0,0,0,0.05);
 }
 
-.title{
-font-size:18px;
+.card img{
+width:100%;
+border-radius:14px;
+}
+
+.name{
 font-weight:600;
+margin-top:8px;
 }
 
 .price{
-margin:8px 0;
 color:#666;
+margin:6px 0;
 }
 
 .btn{
 background:linear-gradient(135deg,#6C4CF1,#8B5CF6);
 color:white;
 border:none;
-padding:12px;
+padding:10px;
 width:100%;
 border-radius:12px;
-font-size:15px;
+font-size:14px;
 cursor:pointer;
 }
 
-.btn:active{
-opacity:0.8;
-}
-
-.cart-box{
+.bottom-nav{
 position:fixed;
 bottom:0;
 width:100%;
 background:white;
-padding:15px;
-box-shadow:0 -5px 15px rgba(0,0,0,0.08);
-}
-
-.cart-btn{
-background:linear-gradient(135deg,#4CAF50,#2ECC71);
-color:white;
-border:none;
-padding:14px;
-width:100%;
-border-radius:14px;
-font-size:16px;
-font-weight:600;
-}
-
-.badge{
-position:fixed;
-top:15px;
-right:15px;
-background:red;
-color:white;
-border-radius:50%;
-width:24px;
-height:24px;
 display:flex;
-align-items:center;
-justify-content:center;
-font-size:12px;
+justify-content:space-around;
+padding:10px 0;
+box-shadow:0 -5px 20px rgba(0,0,0,0.08);
+font-size:13px;
+}
+
+.bottom-nav div{
+text-align:center;
+color:#666;
+}
+
+.active{
+color:#6C4CF1;
+font-weight:600;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">🛒 My Shop</div>
-<div class="badge" id="count">0</div>
+<div class="top">🛍 My Internet Do‘kon</div>
+
+<div class="search">
+<input type="text" placeholder="Mahsulotlarni qidirish...">
+</div>
 
 <div class="products">
 
 <div class="card">
-<div class="title">WK-609</div>
+<img src="https://via.placeholder.com/200x150">
+<div class="name">WK-609</div>
 <div class="price">48 USD</div>
-<button class="btn" onclick="addToCart('WK-609',48)">Savatga qo‘shish</button>
+<button class="btn" onclick="buy('WK-609')">Sotib olish</button>
 </div>
 
 <div class="card">
-<div class="title">E406S</div>
+<img src="https://via.placeholder.com/200x150">
+<div class="name">E406S</div>
 <div class="price">42 USD</div>
-<button class="btn" onclick="addToCart('E406S',42)">Savatga qo‘shish</button>
+<button class="btn" onclick="buy('E406S')">Sotib olish</button>
 </div>
 
 <div class="card">
-<div class="title">TJQ-900</div>
+<img src="https://via.placeholder.com/200x150">
+<div class="name">TJQ-900</div>
 <div class="price">91 USD</div>
-<button class="btn" onclick="addToCart('TJQ-900',91)">Savatga qo‘shish</button>
+<button class="btn" onclick="buy('TJQ-900')">Sotib olish</button>
 </div>
 
 </div>
 
-<div class="cart-box">
-<button class="cart-btn" onclick="checkout()">Buyurtma berish</button>
+<div class="bottom-nav">
+<div class="active">Bosh sahifa</div>
+<div>Katalog</div>
+<div>Savat</div>
+<div>Profil</div>
 </div>
 
 <script>
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-let cart = [];
-
-function addToCart(name,price){
-cart.push({name,price});
-document.getElementById("count").innerText = cart.length;
-}
-
-function checkout(){
-if(cart.length==0){
-alert("Savat bo‘sh");
-return;
-}
-tg.sendData(JSON.stringify(cart));
+function buy(product){
+tg.sendData(product);
 tg.close();
 }
 </script>
