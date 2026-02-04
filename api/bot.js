@@ -1,6 +1,8 @@
 import { createClient } from "@supabase/supabase-js"
 
-export const config = { api: { bodyParser: true } }
+export const config = {
+  api: { bodyParser: true }
+}
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -8,7 +10,7 @@ const supabase = createClient(
 )
 
 const BOT_TOKEN = process.env.BOT_TOKEN
-const ADMIN_ID = 5809105110
+const SUPER_ADMIN = 5809105110 // birinchi admin
 
 export default async function handler(req, res) {
   try {
@@ -27,20 +29,70 @@ export default async function handler(req, res) {
 
     if (!chatId) return res.status(200).send("No chat")
 
-    // ================= START =================
-    if (message?.text === "/start") {
+    // ================= /ID =================
+    if (message?.text === "/id") {
+      return sendMessage(chatId, `🆔 Sizning ID: ${chatId}`)
+    }
 
-      await sendMessage(chatId,
-        "🛒 *Do‘konga xush kelibsiz!*",
+    // ================= /START =================
+    if (message?.text === "/start") {
+      return sendMessage(chatId,
+        "🛒 Do‘konga xush kelibsiz!",
         {
           keyboard: [
             [{ text: "🛍 Mahsulotlar" }],
             [{ text: "📦 Buyurtmalarim" }]
           ],
           resize_keyboard: true
-        },
-        true
+        }
       )
+    }
+
+    // ================= ADMIN TEKSHIRUV =================
+    const { data: adminCheck } = await supabase
+      .from("admins")
+      .select("*")
+      .eq("id", chatId)
+      .single()
+
+    const isAdmin = adminCheck || chatId === SUPER_ADMIN
+
+    // ================= /ADMIN =================
+    if (message?.text === "/admin") {
+
+      if (!isAdmin) {
+        return sendMessage(chatId, "⛔ Siz admin emassiz")
+      }
+
+      return sendMessage(chatId,
+        "👨‍💼 Admin Panel",
+        {
+          keyboard: [
+            [{ text: "📦 Buyurtmalar" }],
+            [{ text: "➕ Mahsulot qo‘shish" }],
+            [{ text: "👥 Admin qo‘shish" }]
+          ],
+          resize_keyboard: true
+        }
+      )
+    }
+
+    // ================= ADMIN QO‘SHISH =================
+    if (message?.text?.startsWith("/addadmin")) {
+
+      if (chatId !== SUPER_ADMIN) {
+        return sendMessage(chatId, "⛔ Faqat super admin qo‘sha oladi")
+      }
+
+      const newAdminId = parseInt(message.text.split(" ")[1])
+
+      if (!newAdminId) {
+        return sendMessage(chatId, "ID kiriting: /addadmin 123456")
+      }
+
+      await supabase.from("admins").insert([{ id: newAdminId }])
+
+      return sendMessage(chatId, `✅ Admin qo‘shildi: ${newAdminId}`)
     }
 
     // ================= MAHSULOTLAR =================
@@ -58,58 +110,25 @@ export default async function handler(req, res) {
       for (const product of products) {
         await sendMessage(
           chatId,
-          `🛍 *${product.name}*\n💰 ${product.price} USD`,
+          `🛍 ${product.name}\n💰 ${product.price} USD`,
           {
             inline_keyboard: [
               [
-                { text: "➖", callback_data: `minus_${product.id}_1` },
-                { text: "1", callback_data: "count" },
-                { text: "➕", callback_data: `plus_${product.id}_1` }
-              ],
-              [
-                { text: "🛒 Savatga qo‘shish", callback_data: `buy_${product.id}_1` }
+                {
+                  text: "🛒 Sotib olish",
+                  callback_data: `buy_${product.id}`
+                }
               ]
             ]
-          },
-          true
+          }
         )
       }
     }
 
-    // ================= PLUS / MINUS =================
-    if (callback?.data?.startsWith("plus_") ||
-        callback?.data?.startsWith("minus_")) {
-
-      const [type, productId, count] = callback.data.split("_")
-      let newCount = parseInt(count)
-
-      if (type === "plus") newCount++
-      if (type === "minus" && newCount > 1) newCount--
-
-      await answerCallback(callback.id)
-
-      await sendMessage(
-        chatId,
-        "Miqdor yangilandi",
-        {
-          inline_keyboard: [
-            [
-              { text: "➖", callback_data: `minus_${productId}_${newCount}` },
-              { text: `${newCount}`, callback_data: "count" },
-              { text: "➕", callback_data: `plus_${productId}_${newCount}` }
-            ],
-            [
-              { text: "🛒 Savatga qo‘shish", callback_data: `buy_${productId}_${newCount}` }
-            ]
-          ]
-        }
-      )
-    }
-
-    // ================= SOTIB OLISH =================
+    // ================= BUY =================
     if (callback?.data?.startsWith("buy_")) {
 
-      const [, productId, count] = callback.data.split("_")
+      const productId = callback.data.replace("buy_", "")
 
       const { data: product } = await supabase
         .from("products")
@@ -121,33 +140,37 @@ export default async function handler(req, res) {
         return sendMessage(chatId, "Mahsulot topilmadi")
       }
 
-      const total = product.price * count
-
       await supabase.from("orders").insert([
         {
           user_id: chatId,
-          items: [{
-            name: product.name,
-            price: product.price,
-            count: count
-          }],
-          total: total,
+          items: [{ name: product.name, price: product.price }],
+          total: product.price,
           status: "NEW"
         }
       ])
 
-      await sendMessage(
-        ADMIN_ID,
-        `🆕 *Yangi buyurtma!*\n👤 ${chatId}\n📦 ${product.name}\n🔢 ${count} dona\n💰 ${total} USD`,
-        null,
-        true
-      )
+      // Adminlarga yuborish
+      const { data: admins } = await supabase
+        .from("admins")
+        .select("*")
 
-      await sendMessage(chatId,
-        `✅ Buyurtma qabul qilindi!\n💰 Jami: ${total} USD`
-      )
+      if (admins) {
+        for (const admin of admins) {
+          await sendMessage(
+            admin.id,
+            `🆕 Yangi buyurtma!\n👤 ${chatId}\n📦 ${product.name}\n💰 ${product.price} USD`
+          )
+        }
+      }
 
-      await answerCallback(callback.id)
+      if (chatId === SUPER_ADMIN) {
+        await sendMessage(
+          SUPER_ADMIN,
+          `🆕 Yangi buyurtma!\n👤 ${chatId}\n📦 ${product.name}\n💰 ${product.price} USD`
+        )
+      }
+
+      await sendMessage(chatId, "✅ Buyurtma qabul qilindi!")
     }
 
     res.status(200).send("OK")
@@ -158,25 +181,14 @@ export default async function handler(req, res) {
   }
 }
 
-async function sendMessage(chatId, text, keyboard = null, markdown = false) {
+async function sendMessage(chatId, text, keyboard = null) {
   await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       chat_id: chatId,
       text,
-      parse_mode: markdown ? "Markdown" : undefined,
       reply_markup: keyboard
-    })
-  })
-}
-
-async function answerCallback(callbackId) {
-  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      callback_query_id: callbackId
     })
   })
 }
