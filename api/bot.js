@@ -18,8 +18,6 @@ export default async function handler(req, res) {
     return res.status(200).send("OK")
   }
 
-  res.status(200).send("OK")
-
   try {
 
     const update = req.body
@@ -30,22 +28,24 @@ export default async function handler(req, res) {
       message?.chat?.id ||
       callback?.message?.chat?.id
 
-    if (!chatId) return
+    if (!chatId) {
+      return res.status(200).send("OK")
+    }
 
-    // ================= START =================
-if (message && message.text && message.text.startsWith("/start")) {
+    // ====== START ======
+    if (message?.text?.startsWith("/start")) {
 
-  await sendMessage(chatId, "🛒 Do‘konga xush kelibsiz!", {
-    inline_keyboard: [
-      [{ text: "📦 Mahsulotlar", callback_data: "products" }],
-      [{ text: "🛒 Savat", callback_data: "cart" }]
-    ]
-  })
+      await sendMessage(chatId, "🛒 Do‘konga xush kelibsiz!", {
+        inline_keyboard: [
+          [{ text: "📦 Mahsulotlar", callback_data: "products" }],
+          [{ text: "🛒 Savat", callback_data: "cart" }]
+        ]
+      })
 
-  return
-}
+      return res.status(200).send("OK")
+    }
 
-    // ================= PRODUCTS =================
+    // ====== PRODUCTS ======
     if (callback?.data === "products") {
 
       const { data: products } = await supabase
@@ -54,7 +54,8 @@ if (message && message.text && message.text.startsWith("/start")) {
         .eq("active", true)
 
       if (!products?.length) {
-        return sendMessage(chatId, "Mahsulot yo‘q")
+        await sendMessage(chatId, "Mahsulot yo‘q")
+        return res.status(200).send("OK")
       }
 
       for (const product of products) {
@@ -70,9 +71,11 @@ if (message && message.text && message.text.startsWith("/start")) {
           }
         )
       }
+
+      return res.status(200).send("OK")
     }
 
-    // ================= ADD TO CART =================
+    // ====== ADD TO CART ======
     if (callback?.data?.startsWith("add_")) {
 
       const productId = callback.data.replace("add_", "")
@@ -82,7 +85,7 @@ if (message && message.text && message.text.startsWith("/start")) {
         .select("*")
         .eq("user_id", chatId)
         .eq("product_id", productId)
-        .single()
+        .maybeSingle()
 
       if (existing) {
         await supabase
@@ -90,19 +93,18 @@ if (message && message.text && message.text.startsWith("/start")) {
           .update({ quantity: existing.quantity + 1 })
           .eq("id", existing.id)
       } else {
-        await supabase.from("cart").insert([
-          {
-            user_id: chatId,
-            product_id: productId,
-            quantity: 1
-          }
-        ])
+        await supabase.from("cart").insert([{
+          user_id: chatId,
+          product_id: productId,
+          quantity: 1
+        }])
       }
 
       await sendMessage(chatId, "✅ Savatga qo‘shildi")
+      return res.status(200).send("OK")
     }
 
-    // ================= VIEW CART =================
+    // ====== VIEW CART ======
     if (callback?.data === "cart") {
 
       const { data: items } = await supabase
@@ -111,15 +113,16 @@ if (message && message.text && message.text.startsWith("/start")) {
         .eq("user_id", chatId)
 
       if (!items?.length) {
-        return sendMessage(chatId, "🛒 Savat bo‘sh")
+        await sendMessage(chatId, "🛒 Savat bo‘sh")
+        return res.status(200).send("OK")
       }
 
       let text = "🛒 Savat:\n\n"
       let total = 0
-
       const keyboard = { inline_keyboard: [] }
 
-      items.forEach(item => {
+      for (const item of items) {
+
         const price = item.products.price
         const sum = price * item.quantity
         total += sum
@@ -128,20 +131,11 @@ if (message && message.text && message.text.startsWith("/start")) {
         text += `💰 ${price} x ${item.quantity} = ${sum} USD\n\n`
 
         keyboard.inline_keyboard.push([
-          {
-            text: "➖",
-            callback_data: `minus_${item.id}`
-          },
-          {
-            text: "➕",
-            callback_data: `plus_${item.id}`
-          },
-          {
-            text: "❌",
-            callback_data: `remove_${item.id}`
-          }
+          { text: "➖", callback_data: `minus_${item.id}` },
+          { text: "➕", callback_data: `plus_${item.id}` },
+          { text: "❌", callback_data: `remove_${item.id}` }
         ])
-      })
+      }
 
       text += `\n💵 Jami: ${total} USD`
 
@@ -150,9 +144,10 @@ if (message && message.text && message.text.startsWith("/start")) {
       ])
 
       await sendMessage(chatId, text, keyboard)
+      return res.status(200).send("OK")
     }
 
-    // ================= PLUS =================
+    // ====== PLUS ======
     if (callback?.data?.startsWith("plus_")) {
 
       const id = callback.data.replace("plus_", "")
@@ -168,10 +163,10 @@ if (message && message.text && message.text.startsWith("/start")) {
         .update({ quantity: data.quantity + 1 })
         .eq("id", id)
 
-      await sendMessage(chatId, "➕ Yangilandi")
+      return res.status(200).send("OK")
     }
 
-    // ================= MINUS =================
+    // ====== MINUS ======
     if (callback?.data?.startsWith("minus_")) {
 
       const id = callback.data.replace("minus_", "")
@@ -191,20 +186,20 @@ if (message && message.text && message.text.startsWith("/start")) {
           .eq("id", id)
       }
 
-      await sendMessage(chatId, "➖ Yangilandi")
+      return res.status(200).send("OK")
     }
 
-    // ================= REMOVE =================
+    // ====== REMOVE ======
     if (callback?.data?.startsWith("remove_")) {
 
       const id = callback.data.replace("remove_", "")
 
       await supabase.from("cart").delete().eq("id", id)
 
-      await sendMessage(chatId, "❌ O‘chirildi")
+      return res.status(200).send("OK")
     }
 
-    // ================= CHECKOUT =================
+    // ====== CHECKOUT ======
     if (callback?.data === "checkout") {
 
       const { data: items } = await supabase
@@ -213,11 +208,11 @@ if (message && message.text && message.text.startsWith("/start")) {
         .eq("user_id", chatId)
 
       if (!items?.length) {
-        return sendMessage(chatId, "Savat bo‘sh")
+        await sendMessage(chatId, "Savat bo‘sh")
+        return res.status(200).send("OK")
       }
 
       let total = 0
-
       const orderItems = items.map(item => {
         total += item.products.price * item.quantity
         return {
@@ -227,29 +222,28 @@ if (message && message.text && message.text.startsWith("/start")) {
         }
       })
 
-      await supabase.from("orders").insert([
-        {
-          user_id: chatId,
-          items: orderItems,
-          total,
-          status: "NEW"
-        }
-      ])
+      await supabase.from("orders").insert([{
+        user_id: chatId,
+        items: orderItems,
+        total,
+        status: "NEW"
+      }])
 
-      await supabase.from("cart")
-        .delete()
-        .eq("user_id", chatId)
+      await supabase.from("cart").delete().eq("user_id", chatId)
 
       await sendMessage(chatId, "✅ Buyurtma yuborildi!")
-
-      await sendMessage(
-        ADMIN_ID,
+      await sendMessage(ADMIN_ID,
         `🆕 Yangi buyurtma\n👤 ${chatId}\n💵 ${total} USD`
       )
+
+      return res.status(200).send("OK")
     }
 
+    return res.status(200).send("OK")
+
   } catch (err) {
-    console.log(err)
+    console.log("FULL ERROR:", err)
+    return res.status(200).send("ERROR")
   }
 }
 
