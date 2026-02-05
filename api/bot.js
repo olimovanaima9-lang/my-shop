@@ -33,15 +33,17 @@ export default async function handler(req, res) {
     if (!chatId) return
 
     // ================= START =================
-    if (message?.text === "/start") {
+if (message && message.text && message.text.startsWith("/start")) {
 
-      await sendMessage(chatId, "🛒 Do‘konga xush kelibsiz!", {
-        inline_keyboard: [
-          [{ text: "📦 Mahsulotlar", callback_data: "products" }],
-          [{ text: "🛒 Savat", callback_data: "cart" }]
-        ]
-      })
-    }
+  await sendMessage(chatId, "🛒 Do‘konga xush kelibsiz!", {
+    inline_keyboard: [
+      [{ text: "📦 Mahsulotlar", callback_data: "products" }],
+      [{ text: "🛒 Savat", callback_data: "cart" }]
+    ]
+  })
+
+  return
+}
 
     // ================= PRODUCTS =================
     if (callback?.data === "products") {
