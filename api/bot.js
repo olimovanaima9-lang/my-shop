@@ -18,6 +18,9 @@ export default async function handler(req, res) {
     return res.status(200).send("OK")
   }
 
+  // 🔥 MUHIM: darhol javob beramiz
+  res.status(200).send("OK")
+
   try {
 
     const update = req.body
@@ -28,9 +31,7 @@ export default async function handler(req, res) {
       message?.chat?.id ||
       callback?.message?.chat?.id
 
-    if (!chatId) {
-      return res.status(200).send("OK")
-    }
+    if (!chatId) return
 
     // ================= START =================
     if (message?.text === "/start") {
@@ -40,12 +41,11 @@ export default async function handler(req, res) {
         "🛒 Do‘konga xush kelibsiz!",
         {
           inline_keyboard: [
-            [{ text: "📦 Mahsulotlar", callback_data: "products" }]
+            [{ text: "📦 Mahsulotlar", callback_data: "products" }],
+            [{ text: "📞 Admin bilan bog‘lanish", callback_data: "admin" }]
           ]
         }
       )
-
-      return res.status(200).send("OK")
     }
 
     // ================= PRODUCTS =================
@@ -57,33 +57,62 @@ export default async function handler(req, res) {
         .eq("active", true)
 
       if (!products?.length) {
-        await sendMessage(chatId, "Mahsulot yo‘q")
-        return res.status(200).send("OK")
+        return sendMessage(chatId, "Mahsulot yo‘q")
       }
 
-      for (const product of products) {
-        await sendMessage(
-          chatId,
-          `🛍 ${product.name}\n💰 ${product.price} USD`,
+      let text = "📦 Mahsulotlar:\n\n"
+
+      const keyboard = {
+        inline_keyboard: []
+      }
+
+      products.forEach(product => {
+        text += `🛍 ${product.name}\n💰 ${product.price} USD\n\n`
+        keyboard.inline_keyboard.push([
           {
-            inline_keyboard: [
-              [{
-                text: "🛒 Sotib olish",
-                callback_data: `buy_${product.id}`
-              }]
-            ]
+            text: `🛒 ${product.name}`,
+            callback_data: `buy_${product.id}`
           }
-        )
-      }
+        ])
+      })
 
-      return res.status(200).send("OK")
+      await sendMessage(chatId, text, keyboard)
     }
 
-    return res.status(200).send("OK")
+    // ================= BUY =================
+    if (callback?.data?.startsWith("buy_")) {
+
+      const productId = callback.data.replace("buy_", "")
+
+      const { data: product } = await supabase
+        .from("products")
+        .select("*")
+        .eq("id", productId)
+        .single()
+
+      if (!product) {
+        return sendMessage(chatId, "Mahsulot topilmadi")
+      }
+
+      await supabase.from("orders").insert([
+        {
+          user_id: chatId,
+          items: [{ name: product.name, price: product.price }],
+          total: product.price,
+          status: "NEW"
+        }
+      ])
+
+      await sendMessage(
+        ADMIN_ID,
+        `🆕 Yangi buyurtma!\n👤 ${chatId}\n📦 ${product.name}\n💰 ${product.price} USD`
+      )
+
+      await sendMessage(chatId, "✅ Buyurtma qabul qilindi!")
+    }
 
   } catch (error) {
     console.log("BOT ERROR:", error)
-    return res.status(200).send("OK")
   }
 }
 
