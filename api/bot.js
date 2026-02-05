@@ -1,7 +1,10 @@
 import { createClient } from "@supabase/supabase-js"
 
 export const config = {
-  api: { bodyParser: true }
+  api: {
+    bodyParser: true,
+    externalResolver: true
+  }
 }
 
 const supabase = createClient(
@@ -10,13 +13,16 @@ const supabase = createClient(
 )
 
 const BOT_TOKEN = process.env.BOT_TOKEN
+const ADMIN_ID = 5809105110
 
 export default async function handler(req, res) {
+
+  // ❗ MUHIM: DARROV OK QAYTARAMIZ
+  res.status(200).send("OK")
+
   try {
 
-    if (req.method !== "POST") {
-      return res.status(200).send("OK")
-    }
+    if (req.method !== "POST") return
 
     const update = req.body
     const message = update.message
@@ -26,51 +32,25 @@ export default async function handler(req, res) {
       message?.chat?.id ||
       callback?.message?.chat?.id
 
-    if (!chatId) {
-      return res.status(200).send("No chat")
-    }
+    if (!chatId) return
 
-    // ================= ADMIN TEKSHIRISH =================
-    const { data: adminCheck } = await supabase
-      .from("admins")
-      .select("*")
-      .eq("id", chatId)
-      .single()
-
-    const isAdmin = !!adminCheck
-
-    // ================= /START =================
+    // ================= START =================
     if (message?.text === "/start") {
 
-      return sendMessage(chatId,
+      await sendMessage(
+        chatId,
         "🛒 Do‘konga xush kelibsiz!",
         {
           inline_keyboard: [
-            [{ text: "📦 Mahsulotlar", callback_data: "products" }],
-            [{ text: "🛍 Savat", callback_data: "cart" }]
+            [{ text: "📦 Mahsulotlar", callback_data: "products" }]
           ]
         }
       )
-    }
 
-    // ================= ADMIN QO‘SHISH =================
-    if (message?.text?.startsWith("/addadmin")) {
+      // DB ga yozamiz (awaitsiz)
+      supabase.from("users").upsert([{ id: chatId }])
 
-      if (!isAdmin) {
-        return sendMessage(chatId, "❌ Siz admin emassiz")
-      }
-
-      const newId = message.text.split(" ")[1]
-
-      if (!newId) {
-        return sendMessage(chatId, "ID yozing: /addadmin 123456")
-      }
-
-      await supabase.from("admins").insert([
-        { id: Number(newId) }
-      ])
-
-      return sendMessage(chatId, "✅ Admin qo‘shildi")
+      return
     }
 
     // ================= MAHSULOTLAR =================
@@ -91,16 +71,16 @@ export default async function handler(req, res) {
           `🛍 ${product.name}\n💰 ${product.price} USD`,
           {
             inline_keyboard: [
-              [
-                {
-                  text: "Sotib olish",
-                  callback_data: `buy_${product.id}`
-                }
-              ]
+              [{
+                text: "🛒 Sotib olish",
+                callback_data: `buy_${product.id}`
+              }]
             ]
           }
         )
       }
+
+      return
     }
 
     // ================= SOTIB OLISH =================
@@ -118,51 +98,35 @@ export default async function handler(req, res) {
         return sendMessage(chatId, "Mahsulot topilmadi")
       }
 
-      const { data: order } = await supabase
-        .from("orders")
-        .insert([
-          {
-            user_id: chatId,
-            total: product.price,
-            status: "NEW"
-          }
-        ])
-        .select()
-        .single()
-
-      await supabase.from("order_items").insert([
+      await supabase.from("orders").insert([
         {
-          order_id: order.id,
-          product_id: product.id,
-          quantity: 1
+          user_id: chatId,
+          items: [{ name: product.name, price: product.price }],
+          total: product.price,
+          status: "NEW"
         }
       ])
 
-      // ADMINLARGA XABAR
-      const { data: admins } = await supabase
-        .from("admins")
-        .select("*")
+      await sendMessage(
+        ADMIN_ID,
+        `🆕 Yangi buyurtma!
+👤 ${chatId}
+📦 ${product.name}
+💰 ${product.price} USD`
+      )
 
-      for (const admin of admins) {
-        await sendMessage(
-          admin.id,
-          `🆕 Yangi buyurtma!\n👤 ${chatId}\n📦 ${product.name}\n💰 ${product.price} USD`
-        )
-      }
+      await sendMessage(chatId, "✅ Buyurtma qabul qilindi!")
 
-      return sendMessage(chatId, "✅ Buyurtma qabul qilindi!")
+      return
     }
 
-    res.status(200).send("OK")
-
   } catch (error) {
-    console.error("SERVER ERROR:", error)
-    res.status(200).send("ERROR")
+    console.log("BOT ERROR:", error)
   }
 }
 
 async function sendMessage(chatId, text, keyboard = null) {
-  await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {
+  await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
