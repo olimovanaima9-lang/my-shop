@@ -1,10 +1,7 @@
 import { createClient } from "@supabase/supabase-js"
 
 export const config = {
-  api: {
-    bodyParser: true,
-    externalResolver: true
-  }
+  api: { bodyParser: true }
 }
 
 const supabase = createClient(
@@ -17,12 +14,11 @@ const ADMIN_ID = 5809105110
 
 export default async function handler(req, res) {
 
-  // ❗ MUHIM: DARROV OK QAYTARAMIZ
-  res.status(200).send("OK")
+  if (req.method !== "POST") {
+    return res.status(200).send("OK")
+  }
 
   try {
-
-    if (req.method !== "POST") return
 
     const update = req.body
     const message = update.message
@@ -32,7 +28,9 @@ export default async function handler(req, res) {
       message?.chat?.id ||
       callback?.message?.chat?.id
 
-    if (!chatId) return
+    if (!chatId) {
+      return res.status(200).send("OK")
+    }
 
     // ================= START =================
     if (message?.text === "/start") {
@@ -47,13 +45,10 @@ export default async function handler(req, res) {
         }
       )
 
-      // DB ga yozamiz (awaitsiz)
-      supabase.from("users").upsert([{ id: chatId }])
-
-      return
+      return res.status(200).send("OK")
     }
 
-    // ================= MAHSULOTLAR =================
+    // ================= PRODUCTS =================
     if (callback?.data === "products") {
 
       const { data: products } = await supabase
@@ -62,7 +57,8 @@ export default async function handler(req, res) {
         .eq("active", true)
 
       if (!products?.length) {
-        return sendMessage(chatId, "Mahsulot yo‘q")
+        await sendMessage(chatId, "Mahsulot yo‘q")
+        return res.status(200).send("OK")
       }
 
       for (const product of products) {
@@ -80,48 +76,14 @@ export default async function handler(req, res) {
         )
       }
 
-      return
+      return res.status(200).send("OK")
     }
 
-    // ================= SOTIB OLISH =================
-    if (callback?.data?.startsWith("buy_")) {
-
-      const productId = callback.data.replace("buy_", "")
-
-      const { data: product } = await supabase
-        .from("products")
-        .select("*")
-        .eq("id", productId)
-        .single()
-
-      if (!product) {
-        return sendMessage(chatId, "Mahsulot topilmadi")
-      }
-
-      await supabase.from("orders").insert([
-        {
-          user_id: chatId,
-          items: [{ name: product.name, price: product.price }],
-          total: product.price,
-          status: "NEW"
-        }
-      ])
-
-      await sendMessage(
-        ADMIN_ID,
-        `🆕 Yangi buyurtma!
-👤 ${chatId}
-📦 ${product.name}
-💰 ${product.price} USD`
-      )
-
-      await sendMessage(chatId, "✅ Buyurtma qabul qilindi!")
-
-      return
-    }
+    return res.status(200).send("OK")
 
   } catch (error) {
     console.log("BOT ERROR:", error)
+    return res.status(200).send("OK")
   }
 }
 
